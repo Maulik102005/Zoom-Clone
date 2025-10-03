@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV != "production") {
+  require("dotenv").config();
+}
+
 import express from "express";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
@@ -13,6 +17,8 @@ app.use(express.json({ limit: "40kb" })); //less payload; prevents attack
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
 
 app.use("/api/v1/users", userRoutes);
+
+const dbUrl = process.env.ATLASDB_URL;
 
 // Test route
 app.get("/home", (req, res) => {
@@ -30,9 +36,7 @@ app.set("port", process.env.PORT || 8000);
 // Start server
 const start = async () => {
   try {
-    const connectionDb = await mongoose.connect(
-      "mongodb+srv://maulikdave2005:qSDDauyCVH9to1bM@cluster0.31psizi.mongodb.net/Zoom?retryWrites=true&w=majority&appName=Cluster0"
-    );
+    const connectionDb = await mongoose.connect(dbUrl);
 
     console.log("MongoDB connected");
 
