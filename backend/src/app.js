@@ -5,11 +5,14 @@ import mongoose from "mongoose";
 import cors from "cors";
 
 import { connectToSocket } from "./controllers/socketManager.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "40kb" })); //less payload; prevents attack
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
+
+app.use("/api/v1/users", userRoutes);
 
 // Test route
 app.get("/home", (req, res) => {
@@ -28,7 +31,7 @@ app.set("port", process.env.PORT || 8000);
 const start = async () => {
   try {
     const connectionDb = await mongoose.connect(
-      "mongodb+srv://maulikdave2005:qSDDauyCVH9to1bM@cluster0.31psizi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+      "mongodb+srv://maulikdave2005:qSDDauyCVH9to1bM@cluster0.31psizi.mongodb.net/Zoom?retryWrites=true&w=majority&appName=Cluster0"
     );
 
     console.log("MongoDB connected");
