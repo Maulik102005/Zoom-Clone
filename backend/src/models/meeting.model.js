@@ -6,5 +6,5 @@ const meetingSchema = new Schema({
   date: { type: Date, default: Date.now, required: true },
 });
 
-const meeting = mongoose.model("Meeting", meetingSchema);
-export { meeting };
+const Meeting = mongoose.model("Meeting", meetingSchema);
+export { Meeting };
