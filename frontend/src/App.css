@@ -1,13 +1,63 @@
-*{
-  margin:  0;
+* {
+  margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-.landingPageContainer{
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.landingPageContainer {
+  color: white;
   height: 100vh;
   width: 100vw;
+  background: url("/public/background.png") no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
 }
+
+/* Navbar styling */
+.landingPageContainer nav {
+  padding: 1.6rem 1.2rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.4); /* slight transparency */
+  backdrop-filter: blur(5px);
+  z-index: 10;
+}
+
+.landingPageContainer nav h2 {
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.landingPageContainer nav .navList {
+  display: flex;
+  gap: 1.6rem;
+  cursor: pointer;
+}
+
+/* Main container styling */
+.landingMainContainer {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 3rem;
+  height: 70vh;
+  align-items: center;
+  
+}
+
+.landingMainContainer > div:nth-child(1) {
+  /* Dont use Scale => Not responsive */
+  font-size: 2.2 rem;
+  
+}
+
+.landingMainContainer > div:nth-child(2) img {
+  height: 70vh;
+  width: auto;
+}
+
+
+
