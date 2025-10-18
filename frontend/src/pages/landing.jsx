@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function LandingPage() {
   return (
@@ -23,12 +24,12 @@ export default function LandingPage() {
             <span style={{ color: "#FF9839" }}>Connect</span> with your loved
             ones
           </h1>
-          <p>
-            Experience seamless video calls with our user-friendly platform.
-          </p>
+          <p>Experience seamless video calls with our user-friendly platform</p>
 
-          <div role="button" className="getStartedButton">
-            Get Started
+          <div role="button">
+            <Link to="/auth" className="getStartedLink">
+              Get Started
+            </Link>
           </div>
         </div>
 
