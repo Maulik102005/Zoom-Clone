@@ -6,10 +6,11 @@ import { useNavigate } from "react-router-dom";
 export const AuthContext = createContext({});
 
 const client = axios.create({
-  baseURL: `localhost:8000/api/v1/users`,
+  baseURL: `http://localhost:8000/api/v1/users`,
 });
 
 export const AuthProvider = ({ children }) => {
+  //childre n are the components wrapped by AuthProvider
   const authContext = useContext(AuthContext);
 
   const [userData, setUserData] = useState(authContext);
