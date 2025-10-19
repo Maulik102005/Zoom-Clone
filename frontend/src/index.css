@@ -4,3 +4,24 @@
   box-sizing: border-box;
 }
 
+/* Set a global base size (affects all rem-based sizes) */
+html {
+  font-size: 14px; /* try 14px or 13px if you want smaller */
+}
+
+/* Keep your existing body styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* no need to set font-size here if you want rem-based control */
+}
+
+/* Make code slightly smaller (rem-based) */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 0.8125rem; /* = 13px when root is 16px; with root 14px it's ~11.4px */
+}
