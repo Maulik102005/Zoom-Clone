@@ -45,11 +45,48 @@ export default function VideoMeetComponent() {
     getPermissions();
   }, []);
 
-  const connect = () => {
-    if (username.trim() !== "") {
-      setAskForUsername(false);
-      // Later: connectToSocketServer();
+  let getUserMediaSuccess = (stream) => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    } else {
+      console.error("localVideoRef is not assigned.");
     }
+  };
+
+  let getUserMedia = async () => {
+    if ((video && videoAvailable) || (audio && audioAvailable)) {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: video && videoAvailable,
+          audio: audio && audioAvailable,
+        })
+        .then(getUserMediaSuccess) // media success (I muted my audio => Mute my audio in all connections)
+        .then((stream) => {})
+        .catch((err) => {
+          console.error("Error accessing media devices.", err);
+        });
+    } else {
+      try {
+        let tracks = localVideoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      } catch (err) {
+        console.error("Error stopping media tracks.", err);
+      }
+    }
+  };
+  useEffect(() => {
+    if (video !== undefined && audio !== undefined) getUserMedia();
+  }, [audio, video]);
+
+  const getMedia = () => {
+    setVideo(videoAvailable);
+    setAudio(audioAvailable);
+    connectToSocketServer();
+  };
+
+  let connect = () => {
+    setAskForUsername(false);
+    getMedia();
   };
 
   return (
@@ -69,25 +106,13 @@ export default function VideoMeetComponent() {
           </Button>
 
           <div style={{ marginTop: "1rem" }}>
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              width="300"
-              height="200"
-            ></video>
+            <video ref={localVideoRef} autoPlay muted></video>
           </div>
         </div>
       ) : (
         <div className="meeting">
           <h2>Welcome {username}</h2>
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            width="300"
-            height="200"
-          ></video>
+          <video ref={localVideoRef} autoPlay muted></video>
         </div>
       )}
     </div>
