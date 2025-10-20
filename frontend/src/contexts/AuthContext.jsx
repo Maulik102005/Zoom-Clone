@@ -52,6 +52,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Automatically register and login user
+  const handleRegisterAndLogin = async (name, username, password) => {
+    const message = await handleRegister(name, username, password);
+    await handleLogin(username, password);
+    return message;
+  };
+
   const getHistoryOfUser = async () => {
     try {
       let request = await client.get("/get_all_activity", {
@@ -84,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     getHistoryOfUser,
     handleRegister,
     handleLogin,
+    handleRegisterAndLogin,
   };
 
   return <AuthContext.Provider value={data}>{children}</AuthContext.Provider>;

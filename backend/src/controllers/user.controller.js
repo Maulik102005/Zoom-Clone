@@ -17,7 +17,7 @@ const login = async (req, res) => {
         .status(httpStatus.NOT_FOUND)
         .json({ message: "User not found" });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password); //bcrypt... is promisr which is always true. By putting await we get true/false
     if (isMatch) {
       //cant use hashedpassword as it is different everytime
       let token = crypto.randomBytes(20).toString("hex"); //token stored in local storage (Only token passed for get meeting)=> More secure
@@ -25,6 +25,10 @@ const login = async (req, res) => {
       user.token = token;
       await user.save();
       return res.status(httpStatus.OK).json({ token: token });
+    } else {
+      return res
+        .status(httpStatus.UNAUTHORIZED)
+        .json({ message: "Invalid credentials" });
     }
   } catch (e) {
     return res.status(500).json({ message: `Something went wrong!!! ${e}` });
@@ -53,7 +57,7 @@ const register = async (req, res) => {
     await newUser.save();
     res.status(httpStatus.CREATED).json({ message: "User registered" });
   } catch (e) {
-    console.error("❌ Error in register:", e); // 👈 add this line
+    console.error("Error in register:", e); // 👈 add this line
     res.json({ message: `Something went wrong ${e}` });
   }
 };
