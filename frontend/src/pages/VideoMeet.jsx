@@ -78,6 +78,58 @@ export default function VideoMeetComponent() {
     if (video !== undefined && audio !== undefined) getUserMedia();
   }, [audio, video]);
 
+  let getMessageFromServer = (fromId, message) => {
+    var signal = JSON.parse(message);
+
+    if (fromId !== socketIdRef.current) {
+      if (signal.sdp) {
+        connections[fromId]
+          .setRemoteDescription(
+            //reading the offer letter
+            new RTCSessionDescription(signal.sdp)
+          )
+          .then(() => {
+            if (signal.sdp.type === "offer") {
+              connections[fromId]
+                .createAnswer()
+                .then((answer) => {
+                  //we send an answer letter which whnen received will set remote description
+                  connections[fromId].setLocalDescription(answer);
+                })
+                .then(() => {
+                  socketRef.current.emit(
+                    "sdp",
+                    fromId,
+                    JSON.stringify({
+                      sdp: connections[fromId].localDescription,
+                    })
+                  );
+                })
+                .catch((err) => {
+                  console.error("Error creating answer:", err);
+                })
+                .catch((err) => {
+                  console.error("Error setting remote description:", err);
+                });
+            }
+          });
+      }
+
+      if (signal.ice) {
+        connections[fromId]
+          .addIceCandidate(
+            //adding ice candidate to connection
+            new RTCIceCandidate(signal.ice)
+          )
+          .catch((err) => {
+            console.error("Error adding ICE candidate:", err);
+          });
+      }
+    }
+  };
+
+  let addMessage = (data, sender, socketIdSender) => {};
+
   let connectToSocketServer = () => {
     socketRef.current = io.connect(server_url, { secure: false });
     socketRef.current.on("signal", gotMessageFromServer);
