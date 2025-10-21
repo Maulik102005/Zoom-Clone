@@ -78,6 +78,68 @@ export default function VideoMeetComponent() {
     if (video !== undefined && audio !== undefined) getUserMedia();
   }, [audio, video]);
 
+  let connectToSocketServer = () => {
+    socketRef.current = io.connect(server_url, { secure: false });
+    socketRef.current.on("signal", gotMessageFromServer);
+    socketRef.current.on("connect", () => {
+      socketRef.current.emit("join-call", window.location.href);
+      socketIdRef.current = socketRef.current.id;
+      socketRef.current.on("chat-message", addMessage);
+
+      socketRef.current.on("user-left", (id) => {
+        setVideo((videos) => videos.filter((video) => video.socketId !== id)); //Get all videos except of that one id that has left
+      });
+
+      socketRef.current.on("user-joined", (id, clients) => {
+        clients.forEach((socketListId) => {
+          connections[socketListId] = new RTCPeerConnection(
+            peerConfigConnections
+          );
+
+          connections[socketListId].onicecandidate = (event) => {
+            if (event.candidate != null) {
+              socketRef.current.emit(
+                "signal",
+                socketListId,
+                JSON.stringify({ ice: event.candidate })
+              );
+            }
+          };
+
+          connections[socketListId].addStream = (event) => {
+            let videoExists = localVideoRef.current.find(
+              (video) => video.socketId === socketListId
+            ); //if video exists
+            if (videoExists) {
+              setVideo((videos) => {
+                const updatedVideos = videos.map((video) => {
+                  video.socketId === socketListId
+                    ? { ...video, srcObject: event.stream }
+                    : video;
+                });
+                videoRef.current = updatedVideos;
+                return updatedVideos;
+              });
+            } else {
+              let newVideo = {
+                socketId: socketListId,
+                stream: event.stream,
+                autoPlay: true,
+                playsinline: true,
+              };
+
+              setVideos((videos) => {
+                const updatedVideos = [...videos, newVideo]; // ... => for pushing back (CRUD operator)
+                videoRef.current = updatedVideos;
+                return updatedVideos;
+              });
+            }
+          };
+        });
+      });
+    });
+  };
+
   const getMedia = () => {
     setVideo(videoAvailable);
     setAudio(audioAvailable);
