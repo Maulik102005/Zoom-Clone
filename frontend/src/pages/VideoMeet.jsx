@@ -128,14 +128,47 @@ export default function VideoMeetComponent() {
                 playsinline: true,
               };
 
-              setVideos((videos) => {
+              setVideo((videos) => {
                 const updatedVideos = [...videos, newVideo]; // ... => for pushing back (CRUD operator)
                 videoRef.current = updatedVideos;
                 return updatedVideos;
               });
             }
           };
+          if (window.localStream !== undefined && window.localStream !== null) {
+            connections[socketListId].addStream(window.localStream);
+          } else {
+            // let blackSilence
+          }
         });
+
+        if (id === socketIdRef.current) {
+          for (let id2 in connections) {
+            // create an offer letter to connect with new user
+            if (id2 === socketIdRef.current) continue; //Same person skip
+
+            try {
+              connections[id2].addStream(window.localStream); // add my stream to connection
+            } catch (err) {
+              console.error("Error creating offer:", err);
+            }
+            connections[id2]
+              .createOffer()
+              .then((offer) => {
+                connections[id2].setLocalDescription(offer); // set my offer as local description
+              })
+              .then(() => {
+                socketRef.current.emit(
+                  "sdp",
+                  id2,
+                  JSON.stringify({ sdp: connections[id2].localDescription }) //handshake between peers
+                );
+              })
+              .catch((err) => {
+                console.error("Error setting local description:", err);
+              });
+          }
+        }
       });
     });
   };
