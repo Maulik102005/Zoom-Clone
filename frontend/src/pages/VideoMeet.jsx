@@ -46,11 +46,98 @@ export default function VideoMeetComponent() {
   }, []);
 
   let getUserMediaSuccess = (stream) => {
-    if (localVideoRef.current) {
+    try {
+      window.localStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      window.localStream = stream;
       localVideoRef.current.srcObject = stream;
-    } else {
-      console.error("localVideoRef is not assigned.");
+
+      for (let id in connections) {
+        if (id === socketIdRef.current) continue;
+
+        connections[id].addStream(window.localStream);
+
+        connections[id].createOffer().then((description) => {
+          connections[id]
+            .setLocalDescription(description)
+            .then(() => {
+              socketRef.current.emit(
+                "sdp",
+                id,
+                JSON.stringify({ sdp: connections[id].localDescription })
+              );
+            })
+            .catch((err) => {
+              console.error("Error setting local description:", err);
+            });
+        });
+      }
+
+      stream.getTracks().forEach(
+        //when a track ends
+        (track) =>
+          (track.onended = () => {
+            setVideo(false);
+            setAudio(false);
+
+            try {
+              let tracks = localVideoRef.current.srcObject.getTracks();
+              tracks.forEach((track) => track.stop());
+            } catch (err) {
+              console.error("Error stopping media tracks.", err);
+            }
+
+            let blackSilence = (...args) =>
+              new MediaStream([black(...args), silence()]);
+            window.localStream = blackSilence();
+            localVideoRef.current.srcObject = window.localStream;
+
+            for (let id in connections) {
+              connections[id].addStream(window.localStream);
+              connections[id]
+                .createOffer()
+                .then((offer) => {
+                  connections[id].setLocalDescription(offer).then(() => {
+                    socketRef.current.emit(
+                      "signal",
+                      id,
+                      JSON.stringify({
+                        sdp: connections[id].localDescription,
+                      })
+                    );
+                  });
+                })
+                .catch((err) => {
+                  console.error("Error setting local description:", err);
+                });
+            }
+          })
+      );
+    } catch (e) {
+      console.error("Error in getUserMediaSuccess:", e);
     }
+  };
+
+  let silence = () => {
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+
+    let dst = oscillator.connect(ctx.createMediaStreamDestination());
+    oscillator.start();
+    return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false });
+  };
+
+  let black = ({ width = 640, height = 480 }) => {
+    let canvas = Object.assign(document.createElement("canvas"), {
+      width,
+      height,
+    });
+    canvas.getContext("2d").fillRect(0, 0, width, height);
+    let stream = canvas.captureStream();
+    stream.addTrack(silence());
+    return stream;
   };
 
   let getUserMedia = async () => {
@@ -190,7 +277,10 @@ export default function VideoMeetComponent() {
           if (window.localStream !== undefined && window.localStream !== null) {
             connections[socketListId].addStream(window.localStream);
           } else {
-            // let blackSilence
+            let blackSilence = (...args) =>
+              new MediaStream([black(...args), silence()]);
+            window.localStream = blackSilence();
+            connections[socketListId].addStream(window.localStream);
           }
         });
 
@@ -260,6 +350,10 @@ export default function VideoMeetComponent() {
         <div className="meeting">
           <h2>Welcome {username}</h2>
           <video ref={localVideoRef} autoPlay muted></video>
+
+          {videos.map((video) => (
+            <div key={video.socketId} className="video-container"></div>
+          ))}
         </div>
       )}
     </div>
