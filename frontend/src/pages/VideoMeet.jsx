@@ -60,16 +60,16 @@ export default function VideoMeetComponent() {
   // }
 
   useEffect(() => {
-    console.log("getPermissions called");
+    console.log("HELLO");
     getPermissions();
   }, []);
 
-  let getDisplayMedia = () => {
+  let getDislayMedia = () => {
     if (screen) {
       if (navigator.mediaDevices.getDisplayMedia) {
         navigator.mediaDevices
           .getDisplayMedia({ video: true, audio: true })
-          .then(getDisplayMediaSuccess)
+          .then(getDislayMediaSuccess)
           .then((stream) => {})
           .catch((e) => console.log(e));
       }
@@ -135,12 +135,9 @@ export default function VideoMeetComponent() {
     connectToSocketServer();
   };
 
-  // Also update getUserMediaSuccess to use modern API:
   let getUserMediaSuccess = (stream) => {
     try {
-      if (window.localStream) {
-        window.localStream.getTracks().forEach((track) => track.stop());
-      }
+      window.localStream.getTracks().forEach((track) => track.stop());
     } catch (e) {
       console.log(e);
     }
@@ -148,25 +145,13 @@ export default function VideoMeetComponent() {
     window.localStream = stream;
     localVideoref.current.srcObject = stream;
 
-    // Update peer connections with new stream
     for (let id in connections) {
       if (id === socketIdRef.current) continue;
 
-      // Remove old tracks
-      const senders = connections[id].getSenders();
-      senders.forEach((sender) => {
-        if (sender.track) {
-          connections[id].removeTrack(sender);
-        }
-      });
+      connections[id].addStream(window.localStream);
 
-      // Add new tracks
-      stream.getTracks().forEach((track) => {
-        connections[id].addTrack(track, stream);
-      });
-
-      // Create new offer
       connections[id].createOffer().then((description) => {
+        console.log(description);
         connections[id]
           .setLocalDescription(description)
           .then(() => {
@@ -180,7 +165,6 @@ export default function VideoMeetComponent() {
       });
     }
 
-    // Handle track ending
     stream.getTracks().forEach(
       (track) =>
         (track.onended = () => {
@@ -200,16 +184,7 @@ export default function VideoMeetComponent() {
           localVideoref.current.srcObject = window.localStream;
 
           for (let id in connections) {
-            const senders = connections[id].getSenders();
-            senders.forEach((sender) => {
-              if (sender.track) {
-                connections[id].removeTrack(sender);
-              }
-            });
-
-            window.localStream.getTracks().forEach((track) => {
-              connections[id].addTrack(track, window.localStream);
-            });
+            connections[id].addStream(window.localStream);
 
             connections[id].createOffer().then((description) => {
               connections[id]
@@ -229,77 +204,21 @@ export default function VideoMeetComponent() {
   };
 
   let getUserMedia = () => {
-    console.log("getUserMedia called - video:", video, "audio:", audio);
-    console.log(
-      "videoAvailable:",
-      videoAvailable,
-      "audioAvailable:",
-      audioAvailable
-    );
-
     if ((video && videoAvailable) || (audio && audioAvailable)) {
-      console.log("Requesting media with video:", video, "audio:", audio);
       navigator.mediaDevices
         .getUserMedia({ video: video, audio: audio })
         .then(getUserMediaSuccess)
-        .catch((e) => console.log("getUserMedia error:", e));
+        .then((stream) => {})
+        .catch((e) => console.log(e));
     } else {
-      console.log("Creating black screen/silence");
       try {
-        // Stop existing tracks
-        if (window.localStream) {
-          window.localStream.getTracks().forEach((track) => {
-            console.log("Stopping track:", track.kind);
-            track.stop();
-          });
-        }
-
-        // Create black video and silent audio
-        let blackSilence = (...args) =>
-          new MediaStream([black(...args), silence()]);
-        window.localStream = blackSilence();
-
-        // IMPORTANT: Update the local video element
-        if (localVideoref.current) {
-          localVideoref.current.srcObject = window.localStream;
-          console.log("Updated local video with black screen");
-        }
-
-        // Update all peer connections with black screen
-        for (let id in connections) {
-          // Remove old stream
-          const senders = connections[id].getSenders();
-          senders.forEach((sender) => {
-            if (sender.track) {
-              connections[id].removeTrack(sender);
-            }
-          });
-
-          // Add new black/silent stream
-          window.localStream.getTracks().forEach((track) => {
-            connections[id].addTrack(track, window.localStream);
-          });
-
-          // Create and send new offer
-          connections[id].createOffer().then((description) => {
-            connections[id]
-              .setLocalDescription(description)
-              .then(() => {
-                socketRef.current.emit(
-                  "signal",
-                  id,
-                  JSON.stringify({ sdp: connections[id].localDescription })
-                );
-              })
-              .catch((e) => console.log(e));
-          });
-        }
-      } catch (e) {
-        console.log("Error creating black screen:", e);
-      }
+        let tracks = localVideoref.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      } catch (e) {}
     }
   };
-  let getDisplayMediaSuccess = (stream) => {
+
+  let getDislayMediaSuccess = (stream) => {
     console.log("HERE");
     try {
       window.localStream.getTracks().forEach((track) => track.stop());
@@ -518,6 +437,7 @@ export default function VideoMeetComponent() {
 
   let handleVideo = () => {
     setVideo(!video);
+    // getUserMedia();
   };
   let handleAudio = () => {
     setAudio(!audio);
@@ -526,7 +446,7 @@ export default function VideoMeetComponent() {
 
   useEffect(() => {
     if (screen !== undefined) {
-      getDisplayMedia();
+      getDislayMedia();
     }
   }, [screen]);
   let handleScreen = () => {
@@ -537,10 +457,8 @@ export default function VideoMeetComponent() {
     try {
       let tracks = localVideoref.current.srcObject.getTracks();
       tracks.forEach((track) => track.stop());
-    } catch (e) {
-      console.log("Error: ", e);
-    }
-    window.location.href = "/home";
+    } catch (e) {}
+    window.location.href = "/";
   };
 
   let openChat = () => {
@@ -561,7 +479,7 @@ export default function VideoMeetComponent() {
     ]);
     if (socketIdSender !== socketIdRef.current) {
       setNewMessages((prevNewMessages) => prevNewMessages + 1);
-    } //Different same sender and reciever
+    }
   };
 
   let sendMessage = () => {
