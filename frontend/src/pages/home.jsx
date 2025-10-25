@@ -10,9 +10,9 @@ function HomeComponent() {
   let navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
 
-  //   const { addToUserHistory } = useContext(AuthContext);
+  const { addToUserHistory } = useContext(AuthContext);
   let handleJoinVideoCall = async () => {
-    // await addToUserHistory(meetingCode);
+    await addToUserHistory(meetingCode);
     navigate(`/${meetingCode}`);
   };
 
