@@ -12,15 +12,20 @@ function HomeComponent() {
 
   const { addToUserHistory } = useContext(AuthContext);
   let handleJoinVideoCall = async () => {
-    await addToUserHistory(meetingCode);
-    navigate(`/${meetingCode}`);
+    try {
+      await addToUserHistory(meetingCode);
+      navigate(`/${meetingCode}`);
+    } catch (err) {
+      console.error("Error while joining:", err);
+      navigate(`/${meetingCode}`); // optional fallback
+    }
   };
 
   return (
     <>
       <div className="navBar">
         <div style={{ display: "flex", alignItems: "center" }}>
-          <h2>Video Call</h2>
+          <h2>VidConnect</h2>
         </div>
 
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -47,9 +52,9 @@ function HomeComponent() {
       <div className="meetContainer">
         <div className="leftPanel">
           <div>
-            <h2>Providing Quality Video Call Just Like Quality Dev</h2>
+            <h2>Providing Quality Video Calling to connect people!!!</h2>
 
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
               <TextField
                 onChange={(e) => setMeetingCode(e.target.value)}
                 id="outlined-basic"

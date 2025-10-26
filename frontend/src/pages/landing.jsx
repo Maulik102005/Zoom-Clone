@@ -8,7 +8,7 @@ export default function LandingPage() {
     <div className="landingPageContainer">
       <nav>
         <div className="navHeader">
-          <h2>Video Call</h2>
+          <h2>VidConnect</h2>
         </div>
         <div className="navList">
           <p

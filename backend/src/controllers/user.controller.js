@@ -109,6 +109,19 @@ const addToHistory = async (req, res) => {
         .json({ message: "Invalid token" });
     }
 
+    const existingMeeting = await Meeting.findOne({
+      user_id: user.username,
+      meetingCode: meeting_code,
+    });
+
+    if (existingMeeting) {
+      // Instead of throwing a duplicate error, just return OK
+      return res
+        .status(httpStatus.OK)
+        .json({ message: "Meeting already exists in history" });
+    }
+
+    // Otherwise, create a new one
     const newMeeting = new Meeting({
       user_id: user.username,
       meetingCode: meeting_code,
